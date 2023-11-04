@@ -1,4 +1,21 @@
+import { useContext, useEffect, useRef } from "react";
+import { EditorContext } from "./EditorContext";
+
 function EditorModal() {
+  const {initEditor, editorInstanceRef} = useContext(EditorContext)
+  const editorRef = useRef(null)
+
+  const handleClick = async () => {
+    const data = await editorInstanceRef.current.save()
+    console.log(data);
+  }
+
+  useEffect(() => {
+    if (!editorRef.current) {
+      initEditor()
+      editorRef.current = true
+    }
+  },[])
   return (  
     <div className="modal fade modal-lg" id="editormodal" data-bs-backdrop="static" data-bs-keyboard="false" tabIndex="-1" aria-labelledby="editormodalLabel" aria-hidden="true">
       <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-lg-down">
@@ -8,11 +25,11 @@ function EditorModal() {
             <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div className="modal-body">
-            Modal Body
+            <div id="editorjs"></div>
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" className="btn btn-primary">Save Note</button>
+            <button type="button" className="btn btn-primary" data-bs-dismiss="modal" onClick={handleClick}>Save Note</button>
           </div>
         </div>
       </div>
