@@ -2,28 +2,67 @@
 import EditorModal from "./components/EditorModal"
 import Card from "./components/Card"
 import Masonry from "react-masonry-css"
+import { useContext, useEffect, useState, useRef } from "react"
+import { EditorContext } from "./components/EditorContext"
+import { nanoid } from "nanoid"
+
 function App() {
-  const dummyNotes = [ 
-    {title: 'Header1', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas volutpat egestas pretium.consectetur adipiscing elit. Maecenas volutpat egestas pretium.consectetur adipiscing elit. Maecenas volutpat egestas pretium. ', id: 1}, 
-    {title: 'Header2', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas volutpat egestas pretium. ', id: 2}, 
-    {title: 'Header3', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. ', id: 3}, 
-    {title: 'Header4', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. ', id: 4}, 
-    {title: 'Header5', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. Maecenas volutpat egestas pretium. ', id: 5}, 
-    {title: 'Header6', body: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas volutpat egestas pretium. ', id: 6}, 
-  ] 
-  
+  const localNotes = JSON.parse(localStorage.getItem('notes'))
+  const [notesArr, setNotesArr] = useState(localNotes ? localNotes : [])
+  const updatedId = useRef(null)
+
+  const {editorInstanceRef} = useContext(EditorContext)
+
+  const handleAdd = () => {
+    updatedId.current = null
+    editorInstanceRef.current.clear()
+  }
+
+  const handleSave = async () => {
+    const data = await editorInstanceRef.current.save()
+    console.log(data);
+    if (updatedId.current) {
+      handleDelete(updatedId.current)
+      data.id = updatedId.current
+      updatedId.current = null
+    } else {
+      data.id = nanoid(10)
+    }
+    data.blocks.length && setNotesArr(prev => [data, ...prev])
+  }
+
+  const handleEdit = (idx) => {
+    updatedId.current = idx
+    notesArr.map(note => {
+      if (note.id === idx) {
+        editorInstanceRef.current.render({
+          blocks: note.blocks,
+        })
+      }
+    })
+  }
+
+  const handleDelete = (idx) => {
+    const filteredNotes= notesArr.filter(note => note.id !== idx)
+    setNotesArr(filteredNotes)
+  }
+
+  useEffect(() => {
+    localStorage.setItem('notes', JSON.stringify(notesArr))
+  },[notesArr])
+
   return (
     <>
-      <EditorModal />
+      <EditorModal onSave={handleSave}/>
       <div className="container text-center mt-5">
         <Masonry breakpointCols={{ default: 3, 1200: 2, 768: 1 }} className="my-masonry-grid d-flex" columnClassName="my-masonry-grid_column"> 
-          {dummyNotes.map((note) => { 
-            return <Card title={note.title} body={note.body} idx={note.id} key={note.id}/> 
+          {notesArr.map((note) => { 
+            return <Card blocks={note.blocks} idx={note.id} key={note.id} onDelete={handleDelete} onEdit={handleEdit} /> 
           })} 
         </Masonry>
       </div>
       <div className="position-fixed bottom-0 end-0 m-4 z-2">
-        <button className="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#editormodal">
+        <button className="btn btn-primary d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#editormodal" onClick={handleAdd}>
           <span className="pe-2">
             New Note
           </span>

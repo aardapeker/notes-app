@@ -1,14 +1,9 @@
 import { useContext, useEffect, useRef } from "react";
 import { EditorContext } from "./EditorContext";
 
-function EditorModal() {
-  const {initEditor, editorInstanceRef} = useContext(EditorContext)
+function EditorModal({onSave}) {
+  const {initEditor} = useContext(EditorContext)
   const editorRef = useRef(null)
-
-  const handleClick = async () => {
-    const data = await editorInstanceRef.current.save()
-    console.log(data);
-  }
 
   useEffect(() => {
     if (!editorRef.current) {
@@ -29,7 +24,7 @@ function EditorModal() {
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" className="btn btn-primary" data-bs-dismiss="modal" onClick={handleClick}>Save Note</button>
+            <button type="button" className="btn btn-primary" data-bs-dismiss="modal" onClick={onSave}>Save Note</button>
           </div>
         </div>
       </div>
